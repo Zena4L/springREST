@@ -4,6 +4,10 @@ import com.rest.Springrestapi.database.UserDaoService;
 import com.rest.Springrestapi.exceptions.UserNotFoundError;
 import com.rest.Springrestapi.model.User;
 import jakarta.validation.Valid;
+import org.springframework.hateoas.EntityModel;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
+
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -25,13 +29,18 @@ public class UserRoutes {
     }
 
     @GetMapping("/users/{id}")
-    public User getAUser(@PathVariable int id){
+    public EntityModel<User> getAUser(@PathVariable int id){
         User user = service.findOne(id);
 
         if (user == null){
             throw new UserNotFoundError("Can not find user with id : "+id);
         }
-        return user;
+
+        var entityModel = EntityModel.of(user);
+        WebMvcLinkBuilder link = linkTo(methodOn(this.getClass()).getAllUsers());
+        entityModel.add(link.withRel("all-users"));
+
+        return entityModel;
     }
 
     @PostMapping("/users")
